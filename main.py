@@ -45,6 +45,28 @@ class World:
 
         self.MAX_FOOD = 3
         self.is_game_over = False
+        self.food_types = [
+            {
+                "color": "red",
+                "prob": 0.5,
+                "score": 1,
+            },
+            {
+                "color": "yellow",
+                "prob": 0.3,
+                "score": 2,
+            },
+            {
+                "color": "orange",
+                "prob": 0.1,
+                "score": 5,
+            },
+            {
+                "color": "cyan",
+                "prob": 0.05,
+                "score": 10,
+            }
+        ]
 
     @property
     def score(self):
@@ -58,19 +80,19 @@ class World:
         self.__init__()
 
     def create_node(self, i, j, color):
-        return Node((i*TILE_SIZE, j*TILE_SIZE), color)
+        return Node((i * TILE_SIZE, j * TILE_SIZE), color)
 
     def setup_tiles(self):
         rows = HEIGHT // TILE_SIZE
         cols = WIDTH // TILE_SIZE
         for i in range(rows):
             for j in range(cols):
-                if i in [0, rows-1] or j in [0, cols-1]:
+                if i in [0, rows - 1] or j in [0, cols - 1]:
                     tile = self.create_node(i, j, "darkgray")
                     tile.is_boundary = True
                     self.boundaries.add(tile)
                 else:
-                    tile = Node((i*TILE_SIZE, j*TILE_SIZE), "black")
+                    tile = Node((i * TILE_SIZE, j * TILE_SIZE), "black")
 
                 self.tiles.add(tile)
 
@@ -80,9 +102,13 @@ class World:
 
     def spawn_food(self):
         if not self.food_count == self.MAX_FOOD:
+            probs = [food["prob"] for food in self.food_types]
+            food_type = random.choices(self.food_types, probs)[0]
             node = random.choice(self.tiles.sprites())
             if not node.is_food and not node.is_boundary:
-                node.image.fill("red")
+                node.score = food_type["score"]
+                node.color = food_type["color"]
+                node.is_food = True
                 self.food.add(node)
 
     def game_over(self):
@@ -110,7 +136,7 @@ class UI:
 
     def game_over(self):
         text = self.font.render("You lose! Press R to retry!", True, "white")
-        text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2))
+        text_rect = text.get_rect(center=(WIDTH / 2, HEIGHT / 2))
         self.display.blit(text, (text_rect.x, text_rect.y))
 
     def update_score(self, value):
@@ -158,7 +184,7 @@ class Snake:
         for tile in self.food.sprites():
             if self.head.rect.colliderect(tile.rect):
                 t = tile
-                self.score += 1
+                self.score += t.score
                 self.new()
                 break
 
@@ -173,7 +199,8 @@ class Snake:
 
         if t:
             t.is_food = False
-            t.image.fill("black")
+            t.score = 0
+            t.color = "black"
             self.food.remove(t)
 
     def move_body(self):
@@ -199,13 +226,16 @@ class Node(pygame.sprite.Sprite):
         super().__init__(*groups)
         self.image = pygame.surface.Surface((TILE_SIZE, TILE_SIZE))
         self.rect = self.image.get_rect(topleft=pos)
-        self.image.fill(color)
+        self.color = color
+        self.score = 0
         self.is_food = False
         self.is_boundary = False
 
     def update(self):
         display = pygame.display.get_surface()
-        display.blit(self.image, (self.rect.x, self.rect.y))
+        #display.blit(self.image, (self.rect.x, self.rect.y))
+        pygame.draw.rect(display, self.color, self.rect)
+        pygame.draw.rect(display, "gray18", self.rect, width=1)
 
 
 class Game:
