@@ -101,7 +101,7 @@ class World:
             self.is_game_over = True
 
     def spawn_food(self):
-        if not self.food_count == self.MAX_FOOD:
+        if self.food_count != self.MAX_FOOD:
             probs = [food["prob"] for food in self.food_types]
             food_type = random.choices(self.food_types, probs)[0]
             node = random.choice(self.tiles.sprites())
@@ -132,7 +132,7 @@ class UI:
 
     @property
     def score_text(self):
-        return "Score: " + str(self.score)
+        return f"Score: {str(self.score)}"
 
     def game_over(self):
         text = self.font.render("You lose! Press R to retry!", True, "white")
@@ -159,19 +159,19 @@ class Snake:
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_LEFT]:
-            if not self.direction.x == 1:
+            if self.direction.x != 1:
                 self.direction.x = -1
                 self.direction.y = 0
         elif keys[pygame.K_RIGHT]:
-            if not self.direction.x == -1:
+            if self.direction.x != -1:
                 self.direction.x = 1
                 self.direction.y = 0
         elif keys[pygame.K_UP]:
-            if not self.direction.y == 1:
+            if self.direction.y != 1:
                 self.direction.y = -1
                 self.direction.x = 0
         elif keys[pygame.K_DOWN]:
-            if not self.direction.y == -1:
+            if self.direction.y != -1:
                 self.direction.y = 1
                 self.direction.x = 0
 
@@ -189,9 +189,8 @@ class Snake:
                 break
 
         for tile in self.body:
-            if not self.head == tile:
-                if self.head.rect.colliderect(tile):
-                    self.score = -1
+            if self.head != tile and self.head.rect.colliderect(tile):
+                self.score = -1
 
         for tile in self.boundaries.sprites():
             if self.head.rect.colliderect(tile):
